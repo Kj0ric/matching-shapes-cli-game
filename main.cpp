@@ -43,7 +43,7 @@ void ReadMatrix(ifstream& input, vector<vector<char>>& matrix) {
 		}
 
 		#ifndef NDEBUG
-				cout << "The matrix rows have equal length..." << endl;
+				cout << "[DEBUG]The matrix rows have equal length..." << endl;
 		#endif
 
 		// Check each character to be either 'O', 'S', or 'X'. If yes, add it to the vector.
@@ -62,7 +62,7 @@ void ReadMatrix(ifstream& input, vector<vector<char>>& matrix) {
 		matrix.push_back(line_vector);
 
 		#ifndef NDEBUG
-				cout << "A valid line is added to the matrix..." << endl;
+				cout << "[DEBUG]A valid line is added to the matrix..." << endl;
 		#endif
 	}
 }
@@ -78,19 +78,49 @@ void PrintMatrix(vector<vector<char>> matrix) {
 	}
 }
 
+bool GetValidInput(int& row, int& col, char& dir) {
+	cout << "Enter row, col, and direction (r/l/u/d). Type '0 0 q' to exit." << endl;
+	bool valid_input = false;
+
+	do {
+		cout << "Move:" << endl;
+		cin >> row >> col >> dir;
+
+		// Check row and column for non-negative values and valid direction
+		if (row == 0 && col == 0 && dir == 'q')
+			// Quite the game
+			return false;
+
+		if ((row < 0 || col < 0) || (dir != 'r' && dir != 'l' && dir != 'u' && dir != 'd')) {
+			cout << "Invalid input. Try again" << endl;
+		}
+		else {
+			valid_input = true;  // Input is valid, exit loop
+		}
+
+	} while(!valid_input && !(row == 0 && col == 0 && dir == 'q'));
+
+	// Otherwise continue the game
+	return true;
+
+}
+
 int main() {
     #ifndef NDEBUG
-		cout << "Program start..." << endl;
+		cout << "[DEBUG]Program start..." << endl;
     #endif
 
 	// Initialize variables
 	string					f_name;
 	vector<vector<char>>	playground;
 	ifstream				input;
+	int						move_row;
+	int						move_column;
+	char					move_direction;
 
 	// Get input file name
 	#ifndef NDEBUG
-		cout << "Getting input file name from cli..." << endl;
+		cout << "[DEBUG]Getting input file name from cli..." << endl;
 	#endif
 	GetFileName(1, f_name);
 	input.open(f_name);
@@ -105,16 +135,33 @@ int main() {
     // Read from the file
         // Check validity of matrix. If not valid, error message and terminate
 	#ifndef NDEBUG
-		cout << f_name << " is open. Ready to read from the file..." << endl;
+		cout << "[DEBUG]" << f_name << " is open. Ready to read from the file..." << endl;
 	#endif
 
 	ReadMatrix(input, playground);
 
 	#ifndef NDEBUG
 		assert( !playground.empty() );		// The matrix should not be empty
-		cout << "The file is read to the matrix. Ready to print the matrix..." << endl;
+		cout << "[DEBUG]The file is read to the matrix. Ready to print the matrix..." << endl;
 	#endif
+
 	cout << "The content of the matrix is:" << endl;
 	PrintMatrix(playground);
+	cout << endl;
 
+	#ifndef NDEBUG
+		cout << "[DEBUG]Gameplay begins..." << endl;
+	#endif
+
+	// At each round, get keyboard input from the user
+	if ( !GetValidInput(move_row, move_column, move_direction) ) {
+		cout << "Exiting the game. Bye bye." << endl;
+		return 0;
+	}
+
+	#ifndef NDEBUG
+		cout << "[DEBUG]Valid inputs are given..." << endl;
+	#endif
+
+	return 0;
 }
