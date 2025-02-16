@@ -34,3 +34,6 @@
 # IDE
 .idea/
 .DS_Store
+
+# CMake
+.cmake-build-*/
