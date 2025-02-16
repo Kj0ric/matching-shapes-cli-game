@@ -1,0 +1,3 @@
+/Users/h4kcrun/CLionProjects/matching-shapes-cli-game/cmake-build-release/CMakeFiles/matching_shapes_cli_game.dir
+/Users/h4kcrun/CLionProjects/matching-shapes-cli-game/cmake-build-release/CMakeFiles/edit_cache.dir
+/Users/h4kcrun/CLionProjects/matching-shapes-cli-game/cmake-build-release/CMakeFiles/rebuild_cache.dir
