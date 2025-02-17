@@ -78,6 +78,7 @@ void PrintMatrix(const vector<vector<char>>& matrix) {
 		}
 		cout << endl;
 	}
+	cout << endl;
 }
 
 bool CheckForMatch(const vector<vector<char>>& matrix) {
@@ -391,7 +392,6 @@ int main() {
 
 	cout << "The content of the matrix is:" << endl;
 	PrintMatrix(playground);
-	cout << endl;
 
 	#ifndef NDEBUG
 		cout << "[DEBUG]Gameplay begins..." << endl;
