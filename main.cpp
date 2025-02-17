@@ -1,5 +1,5 @@
 //
-// Created by Harun Yılmaz on 16.02.2025.
+// Created by Harun Yilmaz on 16.02.2025.
 //
 
 #include "main.h"
@@ -67,7 +67,7 @@ void ReadMatrix(ifstream& input, vector<vector<char>>& matrix) {
 	}
 }
 
-void PrintMatrix(vector<vector<char>> matrix) {
+void PrintMatrix(const vector<vector<char>>& matrix) {
 	// Row
 	for (int i = 0; i < matrix.size(); i++) {
 		// Column
@@ -78,31 +78,166 @@ void PrintMatrix(vector<vector<char>> matrix) {
 	}
 }
 
-bool GetValidInput(int& row, int& col, char& dir) {
-	cout << "Enter row, col, and direction (r/l/u/d). Type '0 0 q' to exit." << endl;
-	bool valid_input = false;
+bool CheckForMatch(const vector<vector<char>>& matrix) {
+	const int row_size = matrix.size();
+	const int col_size = matrix[0].size();
+	bool match_found = false;
 
-	do {
-		cout << "Move:" << endl;
-		cin >> row >> col >> dir;
-
-		// Check row and column for non-negative values and valid direction
-		if (row == 0 && col == 0 && dir == 'q')
-			// Quite the game
-			return false;
-
-		if ((row < 0 || col < 0) || (dir != 'r' && dir != 'l' && dir != 'u' && dir != 'd')) {
-			cout << "Invalid input. Try again" << endl;
+	// Check horizontal matches
+	for (int i = 0; i < row_size; i++) {
+		for (int j = 0; j < col_size - 2; j++) {
+			// Only check non-empty cells
+			if (matrix[i][j] != '-') {
+				// Check if we have at least 3 matching elements horizontally
+				if ( matrix[i][j] == matrix[i][j+1] && matrix[i][j] == matrix[i][j+2] ) {
+					match_found = true;
+				}
+			}
 		}
-		else {
-			valid_input = true;  // Input is valid, exit loop
+	}
+
+	// Check for vertical matches
+	for (int j = 0; j < col_size; j++) {
+		for (int i = 0; i < row_size - 2; i++) {
+			// Only check non-empty cells
+			if (matrix[i][j] != '-') {
+				if ( matrix[i][j] == matrix[i + 1][j] && matrix[i][j] == matrix[i + 2][j] ) {
+					match_found = true;
+				}
+			}
+		}
+	}
+
+	return match_found;
+}
+
+bool SimulateMoveAndCheck(const int row, const int col, const char dir, vector<vector<char>>& matrix) {
+	int new_row = row, new_col = col;
+
+	// Determine target cell based on direction
+	if		(dir == 'r') new_col++;
+	else if (dir == 'l') new_col--;
+	else if (dir == 'u') new_row--;
+	else if (dir == 'd') new_row++;
+	else {
+		#ifndef DEBUG
+			cout << "[DEBUG]Invalid direction while determining target cell based on direction..." << endl;
+		#endif
+	}
+
+	// Temporarily swap two cells
+	const char original = matrix[row][col];
+	const char neighbor = matrix[new_row][new_col];
+	matrix[row][col] = neighbor;
+	matrix[new_row][new_col] = original;
+
+	#ifndef NDEBUG
+		cout << "[DEBUG]Matrix after swap..." << endl;
+		PrintMatrix(matrix);
+	#endif
+
+	// Check for a match
+	const bool match_found = CheckForMatch(matrix);
+
+	// If no match was found, revert the swap
+	if (!match_found) {
+		matrix[row][col] = original;
+		matrix[new_row][new_col] = neighbor;
+	}
+
+	return match_found;
+}
+
+bool GetValidMove(int row, int col, char dir, vector<vector<char>>& matrix, bool& should_exit) {
+	const int matrix_size = matrix.size();
+	const int row_size = matrix[0].size();
+
+	cout << "Move:" << endl;
+	cin >> row >> col >> dir;
+
+	// Check for exit condition
+	if (row == 0 && col == 0 && dir == 'q') {
+		should_exit = true;
+		return false;
+	}
+
+	// Check if inputs are valid
+	if (row < 0 || col < 0 || (dir != 'r' && dir != 'l' && dir != 'u' && dir != 'd')) {
+		cout << "Invalid input. Try again." << endl;
+		return false;
+	}
+
+	// Check if coordinates are within bounds
+	if ( !(row < matrix_size && col < row_size) ) {
+		cout << "Invalid coordinates!" << endl;
+		return false;
+	}
+
+	// Determine the neighbor's coordinates based on direction
+	int neighborRow = row, neighborCol = col;
+	if (dir == 'r') {
+		neighborCol++;
+	} else if (dir == 'l') {
+		neighborCol--;
+	} else if (dir == 'u') {
+		neighborRow--;
+	} else if (dir == 'd') {
+		neighborRow++;
+	}
+
+	// Check if the neighbour is within bounds
+	if (neighborRow < 0 || neighborRow >= matrix_size ||
+		neighborCol < 0 || neighborCol >= row_size) {
+		cout << "Move out of bounds!" << endl;
+		return false;
 		}
 
-	} while(!valid_input && !(row == 0 && col == 0 && dir == 'q'));
+	// Check for empty cells
+	if (matrix[row][col] == '-' || matrix[neighborRow][neighborCol] == '-') {
+		cout << "Cannot swap with an empty cell!" << endl;
+		return false;
+	}
 
-	// Otherwise continue the game
+	// Check if move creates a match
+	if ( !SimulateMoveAndCheck(row, col, dir, matrix) ) {
+		cout << "Invalid move: No match found!" << endl;
+		return false;
+	}
+
 	return true;
+}
 
+void Gameplay(int row, int col, char dir, vector<vector<char>>& matrix) {
+	cout << "Enter row, col, and direction (r/l/u/d). Type '0 0 q' to exit." << endl;
+	bool valid_move_found = false;
+	bool should_exit = false;
+
+	while (true) {
+		valid_move_found = GetValidMove(row, col, dir, matrix, should_exit);
+
+		// Exit gameplay
+		if (should_exit) return;
+
+		if (valid_move_found) {
+			// Handle valid move
+			cout << "After swap:" << endl;
+			PrintMatrix(matrix);
+			cout << "Move successful. Clearing matches..." << endl;
+
+			// Clear matches
+			cout << "After clearing matches:" << endl;
+
+			// Apply gravity
+			cout << "After applying gravity:" << endl;
+
+			#ifndef NDEBUG
+				cout << "[DEBUG]Valid move found. Ready to handle valid move..." << endl;
+			#endif
+		}
+
+		// If the move is invalid, keep asking for a move
+		// If the move is valid, after processing the move keep asking for a move
+	}
 }
 
 int main() {
@@ -154,14 +289,13 @@ int main() {
 	#endif
 
 	// At each round, get keyboard input from the user
-	if ( !GetValidInput(move_row, move_column, move_direction) ) {
-		cout << "Exiting the game. Bye bye." << endl;
-		return 0;
-	}
+	Gameplay(move_row, move_column, move_direction, playground);
 
 	#ifndef NDEBUG
-		cout << "[DEBUG]Valid inputs are given..." << endl;
+		cout << "[DEBUG]Gameplay function exited..." << endl;
 	#endif
+
+	cout << "Exiting the game. Bye bye." << endl;
 
 	return 0;
 }
