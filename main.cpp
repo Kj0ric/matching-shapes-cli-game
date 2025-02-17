@@ -3,6 +3,8 @@
 //
 
 #include "main.h"
+
+#include <algorithm>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -207,6 +209,111 @@ bool GetValidMove(int row, int col, char dir, vector<vector<char>>& matrix, bool
 	return true;
 }
 
+void MarkHorizontalMatches(const vector<vector<char>>& matrix, vector<vector<bool>>& marks) {
+	const int row_size = matrix.size();
+	const int col_size = matrix[0].size();
+
+	for (int i = 0; i < row_size; i++) {
+		int j = 0;
+
+		while (j < col_size) {
+			if (matrix[i][j] == '-') {
+				j++;	// Skip empty ('-') cells
+			} else {
+				const char shape = matrix[i][j];
+				const int start_idx = j;
+
+				// Go until the end of the consecutive sequence
+				while (j < col_size && matrix[i][j] == shape) {
+					j++;
+				}
+				const int length = j - start_idx;
+				if (length >= 3) {
+					// Mark all positions in the sequence
+					for (int k = start_idx; k < j; k++) {
+						marks[i][k] = true;
+					}
+				}
+			}
+		}
+	}
+}
+
+void MarkVerticalMatches(const vector<vector<char>>& matrix, vector<vector<bool>>& marks) {
+	const int row_size = matrix.size();
+	const int col_size = matrix[0].size();
+
+	for (int j = 0; j < col_size; ++j) {
+		int i = 0;
+		while (i < row_size) {
+			if (matrix[i][j] == '-') {
+				i++; // Skip empty ('-') cells
+			} else {
+				const char shape = matrix[i][j];
+				const int start_idx = i;
+
+				// Go until the end of the consecutive sequence
+				while (i < row_size && matrix[i][j] == shape) {
+					i++;
+				}
+				const int length = i - start_idx;
+				if (length >= 3) {
+					// Mark all positions in the sequence
+					for (int k = start_idx; k < i; ++k) {
+						marks[k][j] = true;
+					}
+				}
+			}
+		}
+	}
+}
+
+void ReplaceMarkedCells(vector<vector<char>>& matrix, vector<vector<bool>>& marks, bool& changed) {
+	const int row_size = matrix.size();
+	const int col_size = matrix[0].size();
+
+	// Replace marked cells with '-'
+	for (int i = 0; i < row_size; i++) {
+		for (int j = 0; j < col_size; j++) {
+			if (marks[i][j]) {
+				matrix[i][j] = '-';
+				changed = true;
+			}
+		}
+	}
+}
+
+void ClearMatches(vector<vector<char>>& matrix) {
+	bool changed;
+	int row_size = 0;
+	int col_size = 0;
+
+	do {
+		changed = false;	// Reset flag for each iteration
+		row_size = matrix.size();
+		col_size = matrix[0].size();
+
+		// A vector to keep track of matched indices
+		vector<vector<bool>> marks(row_size, vector<bool>(col_size, false));
+
+		// Mark horizontal matches
+		MarkHorizontalMatches(matrix, marks);
+
+		// Replace marked cells with '-'
+		ReplaceMarkedCells(matrix, marks, changed);
+
+		// Reset marks for vertical check
+		marks = vector<vector<bool>>(row_size, vector<bool>(col_size, false));
+
+		// Mark vertical matches
+		MarkVerticalMatches(matrix, marks);
+
+		// Replace marked cells with '-'
+		ReplaceMarkedCells(matrix, marks, changed);
+
+	} while (changed);		// Repeat until no changes
+}
+
 void Gameplay(int row, int col, char dir, vector<vector<char>>& matrix) {
 	cout << "Enter row, col, and direction (r/l/u/d). Type '0 0 q' to exit." << endl;
 	bool valid_move_found = false;
@@ -225,10 +332,12 @@ void Gameplay(int row, int col, char dir, vector<vector<char>>& matrix) {
 			cout << "Move successful. Clearing matches..." << endl;
 
 			// Clear matches
+			ClearMatches(matrix);
 			cout << "After clearing matches:" << endl;
+			PrintMatrix(matrix);
 
 			// Apply gravity
-			cout << "After applying gravity:" << endl;
+			//cout << "After applying gravity:" << endl;
 
 			#ifndef NDEBUG
 				cout << "[DEBUG]Valid move found. Ready to handle valid move..." << endl;
