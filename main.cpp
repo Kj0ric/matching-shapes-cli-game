@@ -10,6 +10,13 @@
 #include <cassert>	// for assert()
 using namespace std;
 
+/*
+	Get a string from the user that is to be used as file name
+	Inputs:
+		- first: indicates whether the prompt is asked first or not
+		- filename: string variable to store the file name
+	No return value
+*/
 void GetFileName(const int first, string& filename) {
 	// Ask for the first time
 	if (first) {
@@ -22,6 +29,14 @@ void GetFileName(const int first, string& filename) {
 	cin >> filename;
 }
 
+/*
+	Read from file and store the matrix in the 2d matrix named "matrix".
+	Check the validity of the matrix. Display corresponding error messages if not valid.
+	Inputs:
+		- input: ifstream object
+		- matrix: 2d matrix to store the file content
+	No return value
+*/
 void ReadMatrix(ifstream& input, vector<vector<char>>& matrix) {
 	string line;
 	int expected_length = 0;
@@ -66,6 +81,11 @@ void ReadMatrix(ifstream& input, vector<vector<char>>& matrix) {
 	}
 }
 
+/*
+	Simply prints the matrix
+	Input: matrix
+	No return value
+*/
 void PrintMatrix(const vector<vector<char>>& matrix) {
 	// Row
 	for (int i = 0; i < matrix.size(); i++) {
@@ -78,6 +98,11 @@ void PrintMatrix(const vector<vector<char>>& matrix) {
 	cout << endl;
 }
 
+/*
+	Iterates through matrix and checks for 3+ consecutive shapes in horizontal or vertical direction
+	Input: matrix
+	Return true if a match is found, false if not
+*/
 bool CheckForMatch(const vector<vector<char>>& matrix) {
 	const int row_size = matrix.size();
 	const int col_size = matrix[0].size();
@@ -111,6 +136,13 @@ bool CheckForMatch(const vector<vector<char>>& matrix) {
 	return match_found;
 }
 
+/*
+	Simulates the move stated by user input to see if it leads to a match
+	Inputs:
+		- row, col, dir: user inputs for move
+		- matrix
+	Returns true if the move given leads to a match, false if not
+*/
 bool SimulateMoveAndCheck(const int row, const int col, const char dir, vector<vector<char>>& matrix) {
 	int new_row = row, new_col = col;
 
@@ -120,7 +152,7 @@ bool SimulateMoveAndCheck(const int row, const int col, const char dir, vector<v
 	else if (dir == 'u') new_row--;
 	else if (dir == 'd') new_row++;
 	else {
-		#ifndef DEBUG
+		#ifndef NDEBUG
 			cout << "[DEBUG]Invalid direction while determining target cell based on direction..." << endl;
 		#endif
 	}
@@ -148,6 +180,19 @@ bool SimulateMoveAndCheck(const int row, const int col, const char dir, vector<v
 	return match_found;
 }
 
+/*
+	Gets a move from the user that is valid.
+	Checks the move not to contain
+		- indices out of boundary
+		- neighbor that is out of boundary
+		- empty cells
+		- swap not yielding a match
+	Inputs:
+		- row, col, dir:
+		- matrix
+		- should_exit: boolean variable to decide on termination
+	Returns true if gets a valid move, false if not
+*/
 bool GetValidMove(int row, int col, char dir, vector<vector<char>>& matrix, bool& should_exit) {
 	const int matrix_size = matrix.size();
 	const int row_size = matrix[0].size();
@@ -207,6 +252,14 @@ bool GetValidMove(int row, int col, char dir, vector<vector<char>>& matrix, bool
 	return true;
 }
 
+/*
+	Marks all the horizontal matches in the matrix. Uses a helper matrix called "marks" and marks the cells
+	in the match as true
+	Inputs:
+		- matrix
+		- marks: helper matrix to indicate the cells to be removed
+	No return value
+*/
 void MarkHorizontalMatches(const vector<vector<char>>& matrix, vector<vector<bool>>& marks) {
 	const int row_size = matrix.size();
 	const int col_size = matrix[0].size();
@@ -237,6 +290,14 @@ void MarkHorizontalMatches(const vector<vector<char>>& matrix, vector<vector<boo
 	}
 }
 
+/*
+	Marks all the vertical matches in the matrix. Uses a helper matrix called "marks" and marks the cells
+	contributing a match as true
+	Inputs:
+		- matrix
+		- marks: helper matrix to indicate the cells to be removed
+	No return value
+*/
 void MarkVerticalMatches(const vector<vector<char>>& matrix, vector<vector<bool>>& marks) {
 	const int row_size = matrix.size();
 	const int col_size = matrix[0].size();
@@ -247,7 +308,7 @@ void MarkVerticalMatches(const vector<vector<char>>& matrix, vector<vector<bool>
 			if (matrix[i][j] == '-') {
 				i++; // Skip empty ('-') cells
 			} else {
-				const char shape = matrix[i][j];
+				const char shape = matrix[i][j];	// Get the shape in the cell
 				const int start_idx = i;
 
 				// Go until the end of the consecutive sequence
@@ -266,6 +327,14 @@ void MarkVerticalMatches(const vector<vector<char>>& matrix, vector<vector<bool>
 	}
 }
 
+/*
+	Uses the helper matrix marks to replace the marked indices by character '-'
+	Inputs:
+		- matrix
+		- marks: helper matrix to indicate the cells to be removed
+		- changed: boolean variable indicating if there has been a replaced cell
+	No return value
+*/
 void ReplaceMarkedCells(vector<vector<char>>& matrix, vector<vector<bool>>& marks, bool& changed) {
 	const int row_size = matrix.size();
 	const int col_size = matrix[0].size();
@@ -281,6 +350,15 @@ void ReplaceMarkedCells(vector<vector<char>>& matrix, vector<vector<bool>>& mark
 	}
 }
 
+/*
+	The main function to clear any matches in the matrix.
+	It uses the helper functions
+		- MarkHorizontalMatches
+		- ReplaceMarkedCells
+		- MarkVerticalMatches
+	Input: matrix
+	No return value
+*/
 void ClearMatches(vector<vector<char>>& matrix) {
 	bool changed;
 	int row_size = 0;
@@ -312,6 +390,11 @@ void ClearMatches(vector<vector<char>>& matrix) {
 	} while (changed);		// Repeat until no changes
 }
 
+/*
+	Applies gravity in the game by pushing the shapes down horizontally if the cells below them are empty
+	Input: matrix
+	No return value
+*/
 void ApplyGravity(vector<vector<char>>& matrix) {
 	const int rows = matrix.size();
 	const int cols = matrix[0].size();
@@ -339,6 +422,13 @@ void ApplyGravity(vector<vector<char>>& matrix) {
 	}
 }
 
+/*
+	The main gameplay function that governs the game rounds and handles game features.
+	Inputs:
+		- row, col, dir: User input row and column number and the direction to make the move
+		- matrix
+	No return value
+*/
 void Gameplay(int row, int col, char dir, vector<vector<char>>& matrix) {
 	cout << "Enter row, col, and direction (r/l/u/d). Type '0 0 q' to exit." << endl;
 	bool valid_move_found = false;
