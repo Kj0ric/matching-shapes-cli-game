@@ -2,9 +2,6 @@
 // Created by Harun Yilmaz on 16.02.2025.
 //
 
-#include "main.h"
-
-#include <algorithm>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -39,7 +36,7 @@ void ReadMatrix(ifstream& input, vector<vector<char>>& matrix) {
 		else {
 			if (line.size() != expected_length) {
 				cout << "The matrix either has invalid dimensions or contains invalid characters." << endl
-					 << "Exiting the game. Bye bye." << endl;
+					 << "Exiting the game. Bye bye.";
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -315,6 +312,33 @@ void ClearMatches(vector<vector<char>>& matrix) {
 	} while (changed);		// Repeat until no changes
 }
 
+void ApplyGravity(vector<vector<char>>& matrix) {
+	const int rows = matrix.size();
+	const int cols = matrix[0].size();
+
+	// Process each column independently
+	for (int col = 0; col < cols; col++) {
+		int writePos = rows - 1;  // Start from bottom
+
+		// Move from bottom to top, moving non-empty cells down
+		for (int readPos = rows - 1; readPos >= 0; readPos--) {
+			if (matrix[readPos][col] != '-') {
+				if (writePos != readPos) {
+					matrix[writePos][col] = matrix[readPos][col];
+					matrix[readPos][col] = '-';
+				}
+				writePos--;
+			}
+		}
+
+		// Fill remaining top positions with empty cells
+		while (writePos >= 0) {
+			matrix[writePos][col] = '-';
+			writePos--;
+		}
+	}
+}
+
 void Gameplay(int row, int col, char dir, vector<vector<char>>& matrix) {
 	cout << "Enter row, col, and direction (r/l/u/d). Type '0 0 q' to exit." << endl;
 	bool valid_move_found = false;
@@ -332,14 +356,17 @@ void Gameplay(int row, int col, char dir, vector<vector<char>>& matrix) {
 			PrintMatrix(matrix);
 			cout << "Move successful. Clearing matches..." << endl;
 
-			// Clear matches
-			ClearMatches(matrix);
-			cout << "After clearing matches:" << endl;
-			PrintMatrix(matrix);
+			while (CheckForMatch(matrix)) {
+				// Clear matches
+				ClearMatches(matrix);
+				cout << "After clearing matches:" << endl;
+				PrintMatrix(matrix);
 
-			// Apply gravity
-			//cout << "After applying gravity:" << endl;
-
+				// Apply gravity
+				ApplyGravity(matrix);
+				cout << "After applying gravity:" << endl;
+				PrintMatrix(matrix);
+			}
 			#ifndef NDEBUG
 				cout << "[DEBUG]Valid move found. Ready to handle valid move..." << endl;
 			#endif
